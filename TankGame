@@ -1,0 +1,175 @@
+print("T: T- Button gives you inf xp of 250k and uses them")
+print("Y: Y- Button teleports you to mostly every shape kinda like U but for shapes")
+print("U: U- Button Teleports you to every player killing them make sure u have good body damage and health")
+wait(1)
+local ba = Instance.new("ScreenGui")
+local ca = Instance.new("TextLabel")
+local da = Instance.new("Frame")
+local _b = Instance.new("TextLabel")
+local ab = Instance.new("TextLabel")
+ba.Parent = game.CoreGui
+ba.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ca.Parent = ba
+ca.Active = true
+ca.BackgroundColor3 = Color3.new(19.176471, 12.176471, 21.176471)
+ca.Draggable = true
+ca.Position = UDim2.new(0.698610067, 0, 0.098096624, 0)
+ca.Size = UDim2.new(0, 304, 0, 52)
+ca.Font = Enum.Font.SourceSansSemibold
+ca.Text = "No Afk Kick"
+ca.TextColor3 = Color3.new(0, 0, 0)
+ca.TextSize = 22
+da.Parent = ca
+da.BackgroundColor3 = Color3.new(21.196078, 43.196078, 12.196078)
+da.Position = UDim2.new(0, 0, 1.0192306, 0)
+da.Size = UDim2.new(0, 304, 0, 107)
+_b.Parent = da
+_b.BackgroundColor3 = Color3.new(19.176471, 12.176471, 21.176471)
+_b.Position = UDim2.new(0, 0, 0.800455689, 0)
+_b.Size = UDim2.new(0, 304, 0, 21)
+_b.Font = Enum.Font.Arial
+_b.Text = "Discord: ZIRHY"
+_b.TextColor3 = Color3.new(0, 0, 0)
+_b.TextSize = 20
+ab.Parent = da
+ab.BackgroundColor3 = Color3.new(7.176471, 12.176471, 54.176471)
+ab.Position = UDim2.new(0, 0, 0.158377379, 0)
+ab.Size = UDim2.new(0, 304, 0, 44)
+ab.Font = Enum.Font.ArialBold
+ab.Text = "Status: Online"
+ab.TextColor3 = Color3.new(0, 0, 0)
+ab.TextSize = 20
+
+local bb = game:service('VirtualUser')
+game:service('Players').LocalPlayer.Idled:Connect(function()
+    bb:CaptureController()
+    bb:ClickButton2(Vector2.new())
+    ab.Text = "You went idle and ROBLOX tried to kick you but I Stopped it!"
+    wait(2)
+    ab.Text = "Script Re-Enabled"
+end)
+
+-- Combined Script Functionality
+local toggleLoops = true
+local teleporting = false
+
+-- Get services
+local UserInputService = game:GetService("UserInputService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+local function purchaseProduct()
+    local productId = 1839620112
+    pcall(function()
+        MarketplaceService:SignalPromptProductPurchaseFinished(Players.LocalPlayer.UserId, productId, true)
+        wait(0)
+    end)
+end
+
+-- Function to handle toggling loops
+local function toggleButton()
+    toggleLoops = not toggleLoops
+end
+
+-- Loop actions
+local function loopActions()
+    while toggleLoops do
+        -- Loop 1: Fire Inventory UpdateUI
+        local xpCapsule = Players.LocalPlayer.inventory:FindFirstChild("XP Capsule")
+        if xpCapsule then
+            ReplicatedStorage.Inventory.UpdateUI:FireServer(xpCapsule)
+            wait(0.1)
+        end
+
+        purchaseProduct()
+
+        local skillArgs = {
+            [1] = "Bullet Damage",
+            [2] = 1,
+            [3] = "Bullet Damage"
+        }
+        ReplicatedStorage.Events.UpdatePlayerstatUI:FireServer()
+        task.wait(0.001)
+    end
+end
+
+local function teleportToChildrenOf(part)
+    local children = part:GetChildren()
+    for i, child in ipairs(children) do
+        if child:IsA("BasePart") then
+            local character = Players.LocalPlayer.Character
+            if character then
+                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    humanoidRootPart.CFrame = child.CFrame
+                    wait(0)
+                end
+            end
+        end
+    end
+end
+
+local function teleportToParts()
+    local xpParts = Workspace:WaitForChild("XPParts")
+    local parts = {
+        xpParts:WaitForChild("Square"),
+        xpParts:WaitForChild("Triangle"),
+        xpParts:WaitForChild("Pentagon"),
+        xpParts:WaitForChild("Hexagon")
+    }
+    for _, part in ipairs(parts) do
+        teleportToChildrenOf(part)
+        wait(0.01)
+    end
+end
+
+local function getRandomPlayer(players)
+    local playerCount = #players
+    if playerCount == 0 then
+        return nil
+    end
+    local randomIndex = math.random(1, playerCount)
+    return players[randomIndex]
+end
+
+local function teleportToPlayer(player)
+    if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local humanoidRootPart = player.Character.HumanoidRootPart
+        local myCharacter = Players.LocalPlayer.Character
+        if myCharacter and myCharacter:FindFirstChild("HumanoidRootPart") then
+            myCharacter.HumanoidRootPart.CFrame = humanoidRootPart.CFrame
+        end
+    end
+end
+
+local function onInput(input, gameProcessedEvent)
+    if gameProcessedEvent then return end
+
+    if input.KeyCode == Enum.KeyCode.T then
+        toggleButton()
+        if toggleLoops then
+            task.spawn(loopActions)
+        end
+    elseif input.KeyCode == Enum.KeyCode.Y then
+        teleporting = not teleporting
+        if teleporting then
+            teleportToParts()
+        end
+    elseif input.KeyCode == Enum.KeyCode.U then
+        teleporting = not teleporting
+        if teleporting then
+            -- Main loop to repeatedly teleport to random players
+            while teleporting do
+                local players = Players:GetPlayers()
+                local randomPlayer = getRandomPlayer(players)
+                teleportToPlayer(randomPlayer)
+                wait(0)
+            end
+        end
+    end
+end
+
+-- Connect the input event to the function
+UserInputService.InputBegan:Connect(onInput)
